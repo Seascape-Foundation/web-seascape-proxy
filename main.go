@@ -35,13 +35,24 @@ func main() {
 		return messages, "destination", nil
 	}
 
+	// the proxy creation will validate the config
+	sourceConfig, err := appConfig.Services[0].GetController(proxy.SourceName)
+	if err != nil {
+		log.Fatal("failed to get source controller's configuration from seascape.yml", "error", err)
+	}
+	web, err := NewWebController(logger)
+	web.AddConfig(sourceConfig)
+
 	service, err := proxy.New(appConfig.Services[0], logger)
 	if err != nil {
 		log.Fatal("proxy.New", "error", err)
 	}
 
 	service.SetRequestHandler(handler)
-	// the proxy needs two parts:
-	// 1. source controllers
-	// 2. handler
+	err = service.AddSourceController(proxy.SourceName, web)
+	if err != nil {
+		log.Fatal("failed to add source controller to the proxy", "error", err)
+	}
+
+	service.Run()
 }
