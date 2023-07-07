@@ -1,0 +1,17 @@
+# Independent service
+
+Services:
+  - Type: Proxy
+    Name: web
+    Instance: web01
+    Controllers:
+      - Type: Router # Replier or Pusher or Publisher or Router
+        Name: "source"
+        Instances:
+          - Port: 8000
+            Instance: "http"
+      - Type: Router
+        Name: "destination"
+        Instances:
+          - Port: 5000
+            Instance: "static"
