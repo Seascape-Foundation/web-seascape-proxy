@@ -1,0 +1,4 @@
+github.com/Seascape-Foundation/sds-common-lib v0.0.0-20230707141423-e403c6e6a3a2 h1:7rP5rDPvncpojP4pMIf3VdMjgtE5nto4s9otQqowHe4=
+github.com/Seascape-Foundation/sds-common-lib v0.0.0-20230707141423-e403c6e6a3a2/go.mod h1:+6kCuE/i7d+cuGHpXddC92quNJ0vSoKq5UXm7BuwwoU=
+github.com/Seascape-Foundation/sds-service-lib v0.0.0-20230707154520-7ba07b155f4e h1:GOCgS1UcRUQIDGKg5bTxXtFwsshgXKL/aUbBrRpeRUE=
+github.com/Seascape-Foundation/sds-service-lib v0.0.0-20230707154520-7ba07b155f4e/go.mod h1:5t0TXbUooh7ZRs0OnNRaJ2Z5l7d2ZIM1iJ0UsAsV6Ds=
