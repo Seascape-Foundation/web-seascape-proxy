@@ -29,10 +29,11 @@ func main() {
 
 	// We won't handle anything
 	handler := func(messages []string,
-		_ log.Logger,
+		controllerLogger log.Logger,
 		_ []*proxy.DestinationClient,
-		_ remote.Clients) ([]string, string, error) {
-		return messages, "destination", nil
+		clients remote.Clients) ([]string, string, error) {
+		controllerLogger.Info("request", "messages", messages)
+		return messages, "static", nil
 	}
 
 	// the proxy creation will validate the config
