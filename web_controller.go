@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Seascape-Foundation/sds-common-lib/data_type/key_value"
 	"github.com/Seascape-Foundation/sds-service-lib/communication/command"
+	"github.com/Seascape-Foundation/sds-service-lib/communication/message"
 	"github.com/Seascape-Foundation/sds-service-lib/configuration"
 	"github.com/Seascape-Foundation/sds-service-lib/log"
 	"github.com/Seascape-Foundation/sds-service-lib/proxy"
@@ -68,6 +69,7 @@ func (web *WebController) initExtensionClients() error {
 		if err != nil {
 			return fmt.Errorf("failed to create a request client: %w", err)
 		}
+		fmt.Println("extension is", extension, "config", extensionConfig)
 		web.extensions.Set(extensionConfig.Name, extension)
 	}
 
@@ -105,7 +107,7 @@ func (web *WebController) Run() error {
 }
 
 func (web *WebController) requestHandler(ctx *fasthttp.RequestCtx) {
-	_, _ = fmt.Fprintf(ctx, "Hello, world!\n\n")
+	/*_, _ = fmt.Fprintf(ctx, "Hello, world!\n\n")
 
 	_, _ = fmt.Fprintf(ctx, "Request method is %q\n", ctx.Method())
 	_, _ = fmt.Fprintf(ctx, "RequestURI is %q\n", ctx.RequestURI())
@@ -119,18 +121,53 @@ func (web *WebController) requestHandler(ctx *fasthttp.RequestCtx) {
 	_, _ = fmt.Fprintf(ctx, "Your ip is %q\n\n", ctx.RemoteIP())
 
 	_, _ = fmt.Fprintf(ctx, "Raw request is:\n---CUT---\n%s\n---CUT---", &ctx.Request)
-	_, _ = fmt.Println(ctx, ctx.PostBody())
+	*/
 
-	ctx.SetContentType("text/plain; charset=utf8")
+	ctx.SetContentType("json/application; charset=utf8")
 
 	// Set arbitrary headers
-	ctx.Response.Header.Set("X-My-Header", "my-header-value")
+	ctx.Response.Header.Set("X-Author", "Medet Ahmetson")
 
-	// Set cookies
-	var c fasthttp.Cookie
-	c.SetKey("cookie-name")
-	c.SetValue("cookie-value")
-	ctx.Response.Header.SetCookie(&c)
+	if !ctx.IsPost() {
+		ctx.SetStatusCode(405)
 
-	_, _ = ctx.WriteString("web proxy finished")
+		reply := message.Fail("only POST method allowed")
+		replyMessage, _ := reply.String()
+		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
+		return
+	}
+	body := ctx.PostBody()
+	if len(body) == 0 {
+		ctx.SetStatusCode(400)
+
+		reply := message.Fail("empty body")
+		replyMessage, _ := reply.String()
+		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
+		return
+	}
+	proxyClient := remote.GetClient(web.extensions, proxy.ControllerName)
+
+	resp, err := proxyClient.RequestRawMessage(string(body))
+
+	if err != nil {
+		ctx.SetStatusCode(403)
+		_, _ = fmt.Fprintf(ctx, "%s", err.Error())
+		return
+	}
+
+	serverReply, err := message.ParseReply(resp)
+	if err != nil {
+		reply := message.Fail("failed to decode server data: " + err.Error())
+		replyMessage, _ := reply.String()
+		ctx.SetStatusCode(403)
+		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
+	}
+
+	if serverReply.IsOK() {
+		ctx.SetStatusCode(200)
+	} else {
+		ctx.SetStatusCode(403)
+	}
+	replyMessage, _ := serverReply.String()
+	_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
 }
