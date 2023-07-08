@@ -6,6 +6,7 @@ import (
 	"github.com/Seascape-Foundation/sds-service-lib/communication/command"
 	"github.com/Seascape-Foundation/sds-service-lib/configuration"
 	"github.com/Seascape-Foundation/sds-service-lib/log"
+	"github.com/Seascape-Foundation/sds-service-lib/proxy"
 	"github.com/Seascape-Foundation/sds-service-lib/remote"
 	"github.com/valyala/fasthttp"
 )
@@ -80,6 +81,10 @@ func (web *WebController) Run() error {
 
 	// todo
 	// init extension clients
+	err := web.initExtensionClients()
+	if err != nil {
+		return fmt.Errorf("initExtensionClients: %w", err)
+	}
 
 	instanceConfig := web.Config.Instances[0]
 	if instanceConfig.Port == 0 {
@@ -92,14 +97,14 @@ func (web *WebController) Run() error {
 
 	addr := fmt.Sprintf(":%d", instanceConfig.Port)
 
-	if err := fasthttp.ListenAndServe(addr, requestHandler); err != nil {
+	if err := fasthttp.ListenAndServe(addr, web.requestHandler); err != nil {
 		return fmt.Errorf("error in ListenAndServe: %w at port %d", err, instanceConfig.Port)
 	}
 
 	return fmt.Errorf("http server was down")
 }
 
-func requestHandler(ctx *fasthttp.RequestCtx) {
+func (web *WebController) requestHandler(ctx *fasthttp.RequestCtx) {
 	_, _ = fmt.Fprintf(ctx, "Hello, world!\n\n")
 
 	_, _ = fmt.Fprintf(ctx, "Request method is %q\n", ctx.Method())
