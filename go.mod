@@ -1,15 +1,18 @@
-module github.com/Seascape-Foundation/web-seascape-proxy
+module github.com/ahmetson/web-proxy
 
 go 1.20
 
-replace github.com/Seascape-Foundation/sds-service-lib => D:/repo/sds-service-lib
+replace github.com/ahmetson/service-lib => D:/sds/service-lib
 
-replace github.com/Seascape-Foundation/sds-common-lib => D:/repo/sds-common-lib
-
-require github.com/Seascape-Foundation/sds-service-lib v0.0.0-20230707154520-7ba07b155f4e
+replace github.com/ahmetson/common-lib => D:/sds/common-lib
 
 require (
-	github.com/Seascape-Foundation/sds-common-lib v0.0.0-20230706114026-ffdae7101871 // indirect
+	github.com/ahmetson/common-lib v0.0.0-20230717140750-5e95e61d69c2
+	github.com/ahmetson/service-lib v0.0.0-00010101000000-000000000000
+	github.com/valyala/fasthttp v1.48.0
+)
+
+require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
 	github.com/charmbracelet/lipgloss v0.6.0 // indirect
@@ -41,7 +44,6 @@ require (
 	github.com/spf13/viper v1.15.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.48.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
