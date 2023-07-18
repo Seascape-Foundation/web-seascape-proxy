@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/Seascape-Foundation/sds-service-lib/configuration"
-	"github.com/Seascape-Foundation/sds-service-lib/log"
-	"github.com/Seascape-Foundation/sds-service-lib/proxy"
-	"github.com/Seascape-Foundation/sds-service-lib/remote"
+	"github.com/ahmetson/service-lib/configuration"
+	"github.com/ahmetson/service-lib/log"
+	"github.com/ahmetson/service-lib/proxy"
+	"github.com/ahmetson/service-lib/remote"
 )
 
 func main() {
@@ -31,9 +31,9 @@ func main() {
 	handler := func(messages []string,
 		controllerLogger log.Logger,
 		_ []*proxy.DestinationClient,
-		clients remote.Clients) ([]string, string, error) {
+		clients remote.Clients) ([]string, error) {
 		controllerLogger.Info("request", "messages", messages)
-		return messages, "static", nil
+		return messages, nil
 	}
 
 	// the proxy creation will validate the config
