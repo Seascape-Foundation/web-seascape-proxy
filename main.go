@@ -18,7 +18,7 @@ func main() {
 		log.Fatal("configuration.NewAppConfig", "error", err)
 	}
 	if len(appConfig.Services) == 0 {
-		log.Fatal("seascape.yml doesn't have services section")
+		log.Fatal("service.yml doesn't have services section")
 	}
 
 	////////////////////////////////////////////////////////////////////////
@@ -39,7 +39,7 @@ func main() {
 	// the proxy creation will validate the config
 	sourceConfig, err := appConfig.Services[0].GetController(proxy.SourceName)
 	if err != nil {
-		log.Fatal("failed to get source controller's configuration from seascape.yml", "error", err)
+		log.Fatal("failed to get source controller's configuration from service.yml", "error", err)
 	}
 	web, err := NewWebController(logger)
 	web.AddConfig(sourceConfig)
