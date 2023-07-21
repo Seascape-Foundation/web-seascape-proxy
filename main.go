@@ -4,7 +4,6 @@ import (
 	"github.com/ahmetson/service-lib/configuration"
 	"github.com/ahmetson/service-lib/log"
 	"github.com/ahmetson/service-lib/proxy"
-	"github.com/ahmetson/service-lib/remote"
 )
 
 func main() {
@@ -13,12 +12,9 @@ func main() {
 		log.Fatal("failed to create a log instance", "error", err)
 	}
 
-	appConfig, err := configuration.NewAppConfig(logger)
+	appConfig, err := configuration.New(logger)
 	if err != nil {
-		log.Fatal("configuration.NewAppConfig", "error", err)
-	}
-	if len(appConfig.Services) == 0 {
-		log.Fatal("service.yml doesn't have services section")
+		logger.Fatal("configuration.NewAppConfig", "error", err)
 	}
 
 	////////////////////////////////////////////////////////////////////////
@@ -28,31 +24,29 @@ func main() {
 	////////////////////////////////////////////////////////////////////////
 
 	// We won't handle anything
-	handler := func(messages []string,
-		controllerLogger log.Logger,
-		_ []*proxy.DestinationClient,
-		clients remote.Clients) ([]string, error) {
-		controllerLogger.Info("request", "messages", messages)
+	handler := func(messages []string, controllerLogger *log.Logger) ([]string, error) {
+		controllerLogger.Info("request handler", "messages", messages)
 		return messages, nil
 	}
 
 	// the proxy creation will validate the config
-	sourceConfig, err := appConfig.Services[0].GetController(proxy.SourceName)
-	if err != nil {
-		log.Fatal("failed to get source controller's configuration from service.yml", "error", err)
-	}
 	web, err := NewWebController(logger)
-	web.AddConfig(sourceConfig)
-
-	service, err := proxy.New(appConfig.Services[0], logger)
 	if err != nil {
-		log.Fatal("proxy.New", "error", err)
+		logger.Fatal("failed to create a web controller", "error", err)
 	}
 
-	service.SetRequestHandler(handler)
-	err = service.AddSourceController(proxy.SourceName, web)
+	service := proxy.New(appConfig, logger)
+	err = service.SetCustomSource(web)
+
 	if err != nil {
-		log.Fatal("failed to add source controller to the proxy", "error", err)
+		logger.Fatal("failed to add source controller to the proxy", "error", err)
+	}
+	service.Controller.SetRequestHandler(handler)
+	service.Controller.RequireDestination(configuration.ReplierType)
+
+	err = service.Prepare()
+	if err != nil {
+		logger.Fatal("failed to prepare the service", "error", err)
 	}
 
 	service.Run()

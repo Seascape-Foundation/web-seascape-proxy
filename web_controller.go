@@ -14,17 +14,14 @@ import (
 
 type WebController struct {
 	Config             *configuration.Controller
-	logger             log.Logger
+	logger             *log.Logger
 	requiredExtensions []string
 	extensionConfigs   key_value.KeyValue
 	extensions         remote.Clients
 }
 
-func NewWebController(parent log.Logger) (*WebController, error) {
-	logger, err := parent.Child("web-controller", true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create a log: %w", err)
-	}
+func NewWebController(parent *log.Logger) (*WebController, error) {
+	logger := parent.Child("web-controller", true)
 
 	webController := WebController{
 		logger:             logger,
@@ -57,15 +54,20 @@ func (web *WebController) RequiredExtensions() []string {
 	return web.requiredExtensions
 }
 
-// RegisterCommand adds a command along with its handler to this controller
-func (web *WebController) RegisterCommand(_ command.Name, _ command.HandleFunc) {
-	web.logger.Fatal("not implemented")
+// AddRoute adds a command along with its handler to this controller
+func (web *WebController) AddRoute(_ *command.Route) error {
+	web.logger.Error("not implemented")
+	return nil
+}
+
+func (web *WebController) ControllerType() configuration.Type {
+	return configuration.ReplierType
 }
 
 func (web *WebController) initExtensionClients() error {
 	for _, extensionInterface := range web.extensionConfigs {
 		extensionConfig := extensionInterface.(*configuration.Extension)
-		extension, err := remote.NewReq(extensionConfig.Name, extensionConfig.Port, &web.logger)
+		extension, err := remote.NewReq(extensionConfig.Name, extensionConfig.Port, web.logger)
 		if err != nil {
 			return fmt.Errorf("failed to create a request client: %w", err)
 		}
