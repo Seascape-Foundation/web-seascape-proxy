@@ -39,7 +39,7 @@ func (web *WebController) AddConfig(config *configuration.Controller) {
 
 // AddExtensionConfig adds the configuration of the extension that the controller depends on
 func (web *WebController) AddExtensionConfig(extension *configuration.Extension) {
-	web.extensionConfigs.Set(extension.Name, extension)
+	web.extensionConfigs.Set(extension.Url, extension)
 }
 
 // RequireExtension marks the extensions that this controller depends on.
@@ -67,12 +67,12 @@ func (web *WebController) ControllerType() configuration.Type {
 func (web *WebController) initExtensionClients() error {
 	for _, extensionInterface := range web.extensionConfigs {
 		extensionConfig := extensionInterface.(*configuration.Extension)
-		extension, err := remote.NewReq(extensionConfig.Name, extensionConfig.Port, web.logger)
+		extension, err := remote.NewReq(extensionConfig.Url, extensionConfig.Port, web.logger)
 		if err != nil {
 			return fmt.Errorf("failed to create a request client: %w", err)
 		}
 		fmt.Println("extension is", extension, "config", extensionConfig)
-		web.extensions.Set(extensionConfig.Name, extension)
+		web.extensions.Set(extensionConfig.Url, extension)
 	}
 
 	return nil
