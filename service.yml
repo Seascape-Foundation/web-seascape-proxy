@@ -1,0 +1,14 @@
+Services:
+    - type: Proxy
+      url: github.com/ahmetson/web-proxy
+      instance: main 1
+      controllers:
+        - type: Replier
+          name: source
+          instances: []
+        - type: Replier
+          name: destination
+          instances: []
+      proxies: []
+      extensions: []
+      pipelines: []
