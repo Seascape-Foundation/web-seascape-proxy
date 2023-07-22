@@ -5,10 +5,16 @@ Services:
       controllers:
         - type: Replier
           name: source
-          instances: []
+          instances:
+            - port: 61019
+              instance: source1
+              name: source
         - type: Replier
           name: destination
-          instances: []
+          instances:
+            - port: 61020
+              instance: destination1
+              name: destination
       proxies: []
       extensions: []
       pipelines: []
