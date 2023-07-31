@@ -14,6 +14,7 @@ import (
 
 type WebController struct {
 	Config             *configuration.Controller
+	serviceUrl         string
 	logger             *log.Logger
 	requiredExtensions []string
 	extensionConfigs   key_value.KeyValue
@@ -33,8 +34,18 @@ func NewWebController(parent *log.Logger) (*WebController, error) {
 	return &webController, nil
 }
 
-func (web *WebController) AddConfig(config *configuration.Controller) {
+func (web *WebController) AddConfig(config *configuration.Controller, serviceUrl string) {
 	web.Config = config
+	web.serviceUrl = serviceUrl
+}
+
+func (web *WebController) Close() error {
+	srv := &fasthttp.Server{}
+	err := srv.Shutdown()
+	if err != nil {
+		return fmt.Errorf("server.Shutdown: %w", err)
+	}
+	return nil
 }
 
 // AddExtensionConfig adds the configuration of the extension that the controller depends on
@@ -114,10 +125,15 @@ func (web *WebController) requestHandler(ctx *fasthttp.RequestCtx) {
 	// Set arbitrary headers
 	ctx.Response.Header.Set("X-Author", "Medet Ahmetson")
 
+	request := message.Request{
+		Command:    "user-request",
+		Parameters: key_value.Empty(),
+	}
+
 	if !ctx.IsPost() {
 		ctx.SetStatusCode(405)
 
-		reply := message.Fail("only POST method allowed")
+		reply := request.Fail("only POST method allowed")
 		replyMessage, _ := reply.String()
 		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
 		return
@@ -126,27 +142,55 @@ func (web *WebController) requestHandler(ctx *fasthttp.RequestCtx) {
 	if len(body) == 0 {
 		ctx.SetStatusCode(400)
 
-		reply := message.Fail("empty body")
+		reply := request.Fail("empty body")
 		replyMessage, _ := reply.String()
 		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
 		return
 	}
 	proxyClient := remote.GetClient(web.extensions, proxy.ControllerName)
 
-	resp, err := proxyClient.RequestRawMessage(string(body))
-
+	request, err := message.ParseRequest([]string{string(body)})
 	if err != nil {
 		ctx.SetStatusCode(403)
-		_, _ = fmt.Fprintf(ctx, "%s", err.Error())
+		reply := request.Fail(err.Error())
+		replyMessage, _ := reply.String()
+		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
+		return
+	}
+
+	if request.IsFirst() {
+		request.SetUuid()
+	}
+	request.AddRequestStack(web.serviceUrl, web.Config.Name, web.Config.Instances[0].Instance)
+	requestMessage, err := request.String()
+
+	if err != nil {
+		ctx.SetStatusCode(500)
+		reply := request.Fail(err.Error())
+		replyMessage, _ := reply.String()
+		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
+		return
+	}
+	resp, err := proxyClient.RequestRawMessage(requestMessage)
+	if err != nil {
+		ctx.SetStatusCode(403)
+		reply := request.Fail(err.Error())
+		replyMessage, _ := reply.String()
+		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
 		return
 	}
 
 	serverReply, err := message.ParseReply(resp)
 	if err != nil {
-		reply := message.Fail("failed to decode server data: " + err.Error())
+		reply := request.Fail("failed to decode server data: " + err.Error())
 		replyMessage, _ := reply.String()
 		ctx.SetStatusCode(403)
 		_, _ = fmt.Fprintf(ctx, "%s", replyMessage)
+	}
+
+	err = serverReply.SetStack(web.serviceUrl, web.Config.Name, web.Config.Instances[0].Instance)
+	if err != nil {
+		web.logger.Warn("failed to add the stack", "reply", serverReply)
 	}
 
 	if serverReply.IsOK() {
