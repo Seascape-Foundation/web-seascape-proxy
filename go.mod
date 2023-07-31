@@ -1,14 +1,14 @@
 module github.com/ahmetson/web-proxy
 
-go 1.20
+go 1.21rc2
 
 replace github.com/ahmetson/service-lib => D:/sds/service-lib
-
 replace github.com/ahmetson/common-lib => D:/sds/common-lib
+replace github.com/ahmetson/web-controller => D:/sds/web-controller
 
 require (
-	github.com/ahmetson/common-lib v0.0.0-20230717140750-5e95e61d69c2
-	github.com/ahmetson/service-lib v0.0.0-00010101000000-000000000000
+	github.com/ahmetson/common-lib v0.0.0-20230724204759-af1083a22757
+	github.com/ahmetson/service-lib v0.0.0-20230729180157-25452151adf9
 	github.com/valyala/fasthttp v1.48.0
 )
 
@@ -16,6 +16,7 @@ require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230518184743-7afd39499903 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
+	github.com/ahmetson/web-controller v0.0.0-20230729233635-24237c265731 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5 // indirect

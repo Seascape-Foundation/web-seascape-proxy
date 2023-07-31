@@ -4,6 +4,7 @@ import (
 	"github.com/ahmetson/service-lib/configuration"
 	"github.com/ahmetson/service-lib/log"
 	"github.com/ahmetson/service-lib/proxy"
+	"github.com/ahmetson/web-controller"
 )
 
 func main() {
@@ -24,7 +25,7 @@ func main() {
 	////////////////////////////////////////////////////////////////////////
 
 	// the proxy creation will validate the config
-	web, err := NewWebController(logger)
+	web, err := web.NewWebController(logger)
 	if err != nil {
 		logger.Fatal("failed to create a web controller", "error", err)
 	}
