@@ -1,47 +1,33 @@
 package main
 
 import (
-	"github.com/ahmetson/service-lib/configuration"
-	"github.com/ahmetson/service-lib/log"
-	"github.com/ahmetson/service-lib/proxy"
-	"github.com/ahmetson/web-controller"
+	"github.com/ahmetson/handler-lib/base"
+	"github.com/ahmetson/handler-lib/config"
+	"github.com/ahmetson/log-lib"
+	"github.com/ahmetson/service-lib"
+	webHandler "github.com/ahmetson/web-lib"
 )
 
 func main() {
-	logger, err := log.New("main", false)
+	logger, err := log.New("web-proxy", false)
 	if err != nil {
 		log.Fatal("failed to create a log instance", "error", err)
 	}
 
-	appConfig, err := configuration.New(logger)
+	proxy, err := service.NewProxy()
 	if err != nil {
-		logger.Fatal("configuration.NewAppConfig", "error", err)
+		logger.Fatal("service.NewProxy", "error", err)
+	}
+	webDefiner := func() base.Interface {
+		return webHandler.New()
+	}
+	proxy.SetHandlerDefiner(config.ReplierType, webDefiner)
+	proxy.SetHandlerDefiner(config.SyncReplierType, webDefiner)
+
+	wg, err := proxy.Start()
+	if err != nil {
+		logger.Fatal("proxy.Start", "error", err)
 	}
 
-	////////////////////////////////////////////////////////////////////////
-	//
-	// Initialize the proxy
-	//
-	////////////////////////////////////////////////////////////////////////
-
-	// the proxy creation will validate the config
-	web, err := web.NewWebController(logger)
-	if err != nil {
-		logger.Fatal("failed to create a web controller", "error", err)
-	}
-
-	service := proxy.New(appConfig, logger)
-	service.SetCustomSource(web)
-
-	if err != nil {
-		logger.Fatal("failed to add source controller to the proxy", "error", err)
-	}
-	service.Controller.RequireDestination(configuration.ReplierType)
-
-	err = service.Prepare()
-	if err != nil {
-		logger.Fatal("failed to prepare the service", "error", err)
-	}
-
-	service.Run()
+	wg.Wait()
 }
